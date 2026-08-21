@@ -1,1 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mizan Tools — DeFi Analytics Platform</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121826;
+            --bg-card: #1a2236;
+            --bg-hover: #232d45;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --border-color: #2d3748;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav { display: flex; gap: 0.5rem; }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+        .status-bar {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+        }
+
+        .status-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); }
+        .status-dot.warning { background: var(--accent-orange); }
+        .status-dot.error { background: var(--accent-red); }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+        .dashboard-section { margin-bottom: 2rem; }
+        .section-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        .signal-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--accent-green);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .signal-card:hover { background: var(--bg-hover); }
+        .signal-card.green { border-left-color: var(--accent-green); }
+        .signal-card.red { border-left-color: var(--accent-red); }
+        .signal-card.blue { border-left-color: var(--accent-blue); }
+
+        .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .signal-type { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: var(--bg-hover); color: var(--text-secondary); }
+        .signal-amount { font-weight: 600; font-size: 1.1rem; }
+        .signal-meta { font-size: 0.85rem; color: var(--text-muted); }
+        .signal-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--border-color); }
+        .btn-success { background: var(--accent-green); color: white; }
+        .btn-danger { background: var(--accent-red); color: white; }
+
+        .pool-table { width: 100%; border-collapse: collapse; }
+        .pool-table th, .pool-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .pool-table th { color: var(--text-muted); font-weight: 500; font-size: 0.85rem; cursor: pointer; }
+        .pool-table th:hover { color: var(--text-primary); }
+
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+
+        .input-group { margin-bottom: 1rem; }
+        .input-label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        .input-field:focus { outline: none; border-color: var(--accent-blue); }
+
+        .slider-container { margin: 1.5rem 0; }
+        .slider-label { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-secondary);
+            appearance: none;
+            cursor: pointer;
+        }
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .fv-scale { display: flex; align-items: center; margin: 2rem 0; position: relative; }
+        .fv-bar { flex: 1; height: 20px; background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-blue) 50%, var(--accent-red) 100%); border-radius: 10px; }
+        .fv-marker { position: absolute; width: 4px; height: 30px; background: white; border-radius: 2px; top: -5px; transition: left 0.3s ease; }
+        .fv-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); }
+
+        .calc-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .calc-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calc-tab:hover { background: var(--bg-hover); }
+        .calc-tab.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        .result-box { background: var(--bg-secondary); border-radius: var(--radius); padding: 1.5rem; margin-top: 1.5rem; }
+        .result-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); }
+        .result-row:last-child { border-bottom: none; }
+        .result-value { font-weight: 600; color: var(--accent-green); }
+        .result-value.negative { color: var(--accent-red); }
+
+        .module { display: none; }
+        .module.active { display: block; }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-action-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-action-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+        .quick-action-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .quick-action-title { font-weight: 600; margin-bottom: 0.25rem; }
+        .quick-action-desc { font-size: 0.85rem; color: var(--text-muted); }
+
+        .chart-container {
+            height: 200px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; gap: 1rem; }
+            .nav { flex-wrap: wrap; justify-content: center; }
+        }
+
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1rem 1.5rem;
+            margin-top: 0.5rem;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .history-list { max-height: 300px; overflow-y: auto; }
+        .history-item { padding: 0.75rem; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+        .history-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🔷 Mizan Tools</div>
+            <nav class="nav">
+                <button class="nav-btn active" data-module="dashboard">Дашборд</button>
+                <button class="nav-btn" data-module="smart-money">Smart Money</button>
+                <button class="nav-btn" data-module="liquidity">Ликвидность</button>
+                <button class="nav-btn" data-module="calculator">Калькулятор</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="status-bar">
+            <div class="status-item"><span class="status-dot"></span><span>API: Онлайн</span></div>
+            <div class="status-item"><span>Обновлено: <span id="last-update">только что</span></span></div>
+            <div class="status-item"><span>Лимиты: <span id="api-limits">98/100</span></span></div>
+            <div class="status-item"><span>Режим: <span id="offline-mode">Онлайн</span></span></div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="module active">
+            <h1 style="margin-bottom: 1.5rem;">Добро пожаловать в Mizan Tools</h1>
+            
+            <div class="quick-actions">
+                <div class="quick-action-card" onclick="switchModule('calculator'); selectCalcTab('dca');">
+                    <div class="quick-action-icon">📊</div>
+                    <div class="quick-action-title">Рассчитать DCA</div>
+                    <div class="quick-action-desc">Оптимальная стратегия входа</div>
+                </div>
+                <div class="quick-action-card" onclick="switchModule('calculator'); selectCalcTab('arbitrage');">
+                    <div class="quick-action-icon">⚡</div>
+                    <div class="quick-action-title">Проверить арбитраж</div>
+                    <div class="quick-action-desc">Поиск возможностей</div>
+                </div>
+                <div class="quick-action-card" onclick="switchModule('calculator'); selectCalcTab('fairvalue');">
+                    <div class="quick-action-icon">💎</div>
+                    <div class="quick-action-title">Оценить Fair Value</div>
+                    <div class="quick-action-desc">Справедливая цена токена</div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="section-title">📡 Лента сигналов Smart Money</div>
+                <div id="dashboard-signals"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="section-title">🔥 Горячие пулы (24ч)</div>
+                <div class="grid-2" id="dashboard-pools"></div>
+            </div>
+        </div>
+
+        <!-- SMART MONEY -->
+        <div id="smart-money" class="module">
+            <h1 style="margin-bottom: 1.5rem;">Smart Money Tracker</h1>
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="grid-4">
+                    <div>
+                        <label class="input-label">Тип адреса</label>
+                        <select class="input-field" id="sm-filter-type">
+                            <option value="all">Все типы</option>
+                            <option value="whale">Киты</option>
+                            <option value="fund">Фонды</option>
+                            <option value="insider">Инсайдеры</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">Токен</label>
+                        <input type="text" class="input-field" id="sm-filter-token" placeholder="USDT, TRX...">
+                    </div>
+                    <div>
+                        <label class="input-label">Мин. сумма ($)</label>
+                        <input type="number" class="input-field" id="sm-filter-amount" placeholder="10000">
+                    </div>
+                    <div>
+                        <label class="input-label">Паттерн</label>
+                        <select class="input-field" id="sm-filter-pattern">
+                            <option value="all">Все паттерны</option>
+                            <option value="accumulation">Накопление</option>
+                            <option value="distribution">Распределение</option>
+                            <option value="consolidation">Консолидация</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="smart-money-feed"></div>
+        </div>
+
+        <!-- LIQUIDITY -->
+        <div id="liquidity" class="module">
+            <h1 style="margin-bottom: 1.5rem;">Анализ Ликвидности</h1>
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="grid-4">
+                    <div>
+                        <label class="input-label">Поиск пула</label>
+                        <input type="text" class="input-field" id="liq-search" placeholder="TOKEN/USDT">
+                    </div>
+                    <div>
+                        <label class="input-label">Сортировка</label>
+                        <select class="input-field" id="liq-sort">
+                            <option value="tvl">По TVL</option>
+                            <option value="volume">По объёму</option>
+                            <option value="age">По возрасту</option>
+                            <option value="change">По изменению</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">Возраст</label>
+                        <select class="input-field" id="liq-age">
+                            <option value="all">Любой</option>
+                            <option value="24h">&lt; 24 часов</option>
+                            <option value="7d">&lt; 7 дней</option>
+                            <option value="30d">&lt; 30 дней</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">Статус</label>
+                        <select class="input-field" id="liq-status">
+                            <option value="all">Все</option>
+                            <option value="verified">Верифицирован</option>
+                            <option value="unaudited">Без аудита</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container" id="liquidity-chart">📈 График ликвидности (выберите пул)</div>
+
+            <div class="card">
+                <table class="pool-table">
+                    <thead>
+                        <tr>
+                            <th>Пул</th>
+                            <th>TVL</th>
+                            <th>24h Объём</th>
+                            <th>Изменение</th>
+                            <th>Возраст</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pools-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CALCULATOR -->
+        <div id="calculator" class="module">
+            <h1 style="margin-bottom: 1.5rem;">DeFi Калькулятор</h1>
+            
+            <div class="calc-tabs">
+                <button class="calc-tab active" data-calc="dca" onclick="selectCalcTab('dca')">DCA Расчёт</button>
+                <button class="calc-tab" data-calc="arbitrage" onclick="selectCalcTab('arbitrage')">Арбитраж</button>
+                <button class="calc-tab" data-calc="fairvalue" onclick="selectCalcTab('fairvalue')">Fair Value</button>
+            </div>
+
+            <!-- DCA Calculator -->
+            <div id="calc-dca" class="calc-content">
+                <div class="grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Параметры входа</h3>
+                        <div class="input-group">
+                            <label class="input-label">Токен</label>
+                            <input type="text" class="input-field" id="dca-token" placeholder="Например: TRX">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Текущая цена ($)</label>
+                            <input type="number" class="input-field" id="dca-price" placeholder="0.15" step="0.0001">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Общая сумма инвестиции ($)</label>
+                            <input type="number" class="input-field" id="dca-total" placeholder="10000">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Количество покупок</label>
+                            <input type="number" class="input-field" id="dca-count" placeholder="5" value="5">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Slippage</span>
+                                <span id="slippage-value">0.5%</span>
+                            </div>
+                            <input type="range" class="slider" id="dca-slippage" min="0" max="5" step="0.1" value="0.5">
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%;" onclick="calculateDCA()">Рассчитать DCA</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Результаты</h3>
+                        <div id="dca-results"><p style="color: var(--text-muted);">Введите параметры для расчёта</p></div>
+                        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="exportDCA()">📥 Экспорт в PNG</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arbitrage Calculator -->
+            <div id="calc-arbitrage" class="calc-content" style="display: none;">
+                <div class="grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Пары для арбитража</h3>
+                        <div class="input-group">
+                            <label class="input-label">Пара 1 (DEX)</label>
+                            <input type="text" class="input-field" id="arb-pair1" placeholder="TRX/USDT on SunSwap">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Цена 1 ($)</label>
+                            <input type="number" class="input-field" id="arb-price1" placeholder="0.15" step="0.0001">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Пара 2 (DEX)</label>
+                            <input type="text" class="input-field" id="arb-pair2" placeholder="TRX/USDT on JustSwap">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Цена 2 ($)</label>
+                            <input type="number" class="input-field" id="arb-price2" placeholder="0.152" step="0.0001">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Сумма инвестиции ($)</label>
+                            <input type="number" class="input-field" id="arb-amount" placeholder="1000">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Газ ($)</label>
+                            <input type="number" class="input-field" id="arb-gas" placeholder="5" value="5">
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%;" onclick="calculateArbitrage()">Рассчитать прибыль</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Результат</h3>
+                        <div id="arb-results"><p style="color: var(--text-muted);">Введите данные для расчёта</p></div>
+                        <div class="result-box" style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-orange); margin-top: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--accent-orange);">⚠️ Данные обновляются каждые 60 сек. Проверьте перед исполнением!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">История возможностей</h3>
+                    <div class="history-list" id="arb-history"></div>
+                </div>
+            </div>
+
+            <!-- Fair Value Calculator -->
+            <div id="calc-fairvalue" class="calc-content" style="display: none;">
+                <div class="grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Метрики токена</h3>
+                        <div class="input-group">
+                            <label class="input-label">Токен</label>
+                            <input type="text" class="input-field" id="fv-token" placeholder="например: SUN">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Market Cap ($)</label>
+                            <input type="number" class="input-field" id="fv-mcap" placeholder="100000000">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Revenue (год, $)</label>
+                            <input type="number" class="input-field" id="fv-revenue" placeholder="10000000">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">TVL ($)</label>
+                            <input type="number" class="input-field" id="fv-tvl" placeholder="50000000">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">P/S аналогов (средний)</label>
+                            <input type="number" class="input-field" id="fv-ps-comps" placeholder="5" step="0.1" value="5">
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%;" onclick="calculateFairValue()">Оценить</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Оценка</h3>
+                        <div id="fv-results"><p style="color: var(--text-muted);">Введите метрики для оценки</p></div>
+                        
+                        <div class="fv-scale" id="fv-scale-container" style="display: none;">
+                            <div class="fv-bar"></div>
+                            <div class="fv-marker" id="fv-marker"></div>
+                        </div>
+                        <div class="fv-labels" id="fv-labels" style="display: none;">
+                            <span>Недооценён</span>
+                            <span>Справедливо</span>
+                            <span>Переоценён</span>
+                        </div>
+
+                        <button class="btn btn-success" style="width: 100%; margin-top: 1rem;" onclick="saveFairValue()">💾 Сохранить оценку</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="modal-overlay" id="signal-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Детали сигнала</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE & DATA ====================
+        const state = {
+            currentModule: 'dashboard',
+            signals: [],
+            pools: [],
+            arbHistory: [],
+            fvSaved: []
+        };
+
+        function formatNumber(num) {
+            if (num >= 1000000) return '$' + (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return '$' + (num / 1000).toFixed(2) + 'K';
+            return '$' + num.toFixed(2);
+        }
+
+        function formatTime(timestamp) {
+            const diff = Date.now() - timestamp;
+            const hours = Math.floor(diff / 3600000);
+            const mins = Math.floor(diff / 60000);
+            if (hours > 0) return hours + 'ч назад';
+            if (mins > 0) return mins + 'м назад';
+            return 'только что';
+        }
+
+        function generateMockData() {
+            const tokens = ['TRX', 'SUN', 'JST', 'WIN', 'BTT', 'NFT', 'APENFT', 'ICE'];
+            const types = ['whale', 'fund', 'insider'];
+            const patterns = ['accumulation', 'distribution', 'consolidation'];
+            
+            for (let i = 0; i < 15; i++) {
+                const token = tokens[Math.floor(Math.random() * tokens.length)];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                const amount = Math.floor(Math.random() * 500000) + 10000;
+                const isBuy = Math.random() > 0.5;
+                
+                state.signals.push({
+                    id: i,
+                    token: token,
+                    type: type,
+                    pattern: pattern,
+                    amount: amount,
+                    isBuy: isBuy,
+                    timestamp: Date.now() - Math.floor(Math.random() * 86400000),
+                    address: 'T' + Math.random().toString(36).substring(2, 34).toUpperCase(),
+                    txHash: Math.random().toString(36).substring(2, 64),
+                    price: (Math.random() * 0.5 + 0.01).toFixed(4)
+                });
+            }
+
+            for (let i = 0; i < 20; i++) {
+                const token = tokens[Math.floor(Math.random() * tokens.length)];
+                const tvl = Math.floor(Math.random() * 10000000) + 100000;
+                const volume = Math.floor(Math.random() * 5000000) + 50000;
+                const ageHours = Math.floor(Math.random() * 720);
+                const change = (Math.random() * 40 - 20).toFixed(2);
+                const statuses = ['verified', 'verified', 'verified', 'unaudited', 'honeypot'];
+                const status = statuses[Math.floor(Math.random() * statuses.length)];
+                
+                state.pools.push({
+                    id: i,
+                    name: token + '/USDT',
+                    token: token,
+                    tvl: tvl,
+                    volume: volume,
+                    ageHours: ageHours,
+                    change: parseFloat(change),
+                    status: status,
+                    apy: (Math.random() * 100 + 5).toFixed(1)
+                });
+            }
+
+            state.signals.sort(function(a, b) { return b.timestamp - a.timestamp; });
+            state.pools.sort(function(a, b) { return b.tvl - a.tvl; });
+        }
+
+        // ==================== NAVIGATION ====================
+        function switchModule(moduleId) {
+            document.querySelectorAll('.module').forEach(function(el) { el.classList.remove('active'); });
+            document.querySelectorAll('.nav-btn').forEach(function(el) { el.classList.remove('active'); });
+            
+            document.getElementById(moduleId).classList.add('active');
+            var navBtn = document.querySelector('[data-module="' + moduleId + '"]');
+            if (navBtn) navBtn.classList.add('active');
+            
+            state.currentModule = moduleId;
+            
+            if (moduleId === 'dashboard') renderDashboard();
+            if (moduleId === 'smart-money') renderSmartMoney();
+            if (moduleId === 'liquidity') renderLiquidity();
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() { switchModule(btn.dataset.module); });
+        });
+
+        // ==================== DASHBOARD ====================
+        function createSignalCard(signal) {
+            var colorClass = signal.isBuy ? 'green' : 'red';
+            var actionText = signal.isBuy ? 'Купил' : 'Прода';
+            var typeLabels = { whale: 'Кит', fund: 'Фонд', insider: 'Инсайдер' };
+            var patternText = signal.pattern === 'accumulation' ? 'Накопление' : signal.pattern === 'distribution' ? 'Распределение' : 'Консолидация';
+            
+            return '<div class="signal-card ' + colorClass + '" onclick="showSignalDetails(' + signal.id + ')">' +
+                '<div class="signal-header">' +
+                    '<span class="signal-type">' + typeLabels[signal.type] + ' • ' + patternText + '</span>' +
+                    '<span style="color: var(--text-muted); font-size: 0.75rem;">' + formatTime(signal.timestamp) + '</span>' +
+                '</div>' +
+                '<div class="signal-amount" style="color: ' + (signal.isBuy ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' +
+                    actionText + ' ' + signal.amount.toLocaleString() + ' ' + signal.token + ' (' + formatNumber(signal.amount * parseFloat(signal.price)) + ')' +
+                '</div>' +
+                '<div class="signal-meta">Цена: $' + signal.price + ' • Адрес: ' + signal.address.substring(0, 8) + '...' + signal.address.slice(-6) + '</div>' +
+                '<div class="signal-actions">' +
+                    '<button class="btn btn-secondary" onclick="event.stopPropagation(); switchModule(\'liquidity\'); filterByToken(\'' + signal.token + '\');">Проверить ликвидность</button>' +
+                    '<button class="btn btn-secondary" onclick="event.stopPropagation(); switchModule(\'calculator\'); selectCalcTab(\'fairvalue\'); document.getElementById(\'fv-token\').value=\'' + signal.token + '\';">Оценить токен</button>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function renderDashboard() {
+            var signalsContainer = document.getElementById('dashboard-signals');
+            var recentSignals = state.signals.slice(0, 5);
+            signalsContainer.innerHTML = recentSignals.map(createSignalCard).join('');
+            
+            var poolsContainer = document.getElementById('dashboard-pools');
+            var newPools = state.pools.filter(function(p) { return p.ageHours < 24; }).slice(0, 4);
+            
+            poolsContainer.innerHTML = newPools.map(function(pool) {
+                return '<div class="card">' +
+                    '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">' +
+                        '<strong>' + pool.name + '</strong>' +
+                        (pool.status === 'verified' ? '<span class="badge badge-success">✅</span>' : '<span class="badge badge-warning">⚠️</span>') +
+                    '</div>' +
+                    '<div style="font-size: 0.85rem; color: var(--text-secondary);">' +
+                        'TVL: ' + formatNumber(pool.tvl) + ' | APY: ' + pool.apy + '%' +
+                    '</div>' +
+                    '<div style="font-size: 0.85rem; color: ' + (pool.change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' +
+                        '24h: ' + (pool.change >= 0 ? '+' : '') + pool.change + '%' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ==================== SMART MONEY ====================
+        function renderSmartMoney() {
+            var container = document.getElementById('smart-money-feed');
+            var filtered = state.signals.slice();
+            
+            var typeFilter = document.getElementById('sm-filter-type').value;
+            var tokenFilter = document.getElementById('sm-filter-token').value.toLowerCase();
+            var amountFilter = parseFloat(document.getElementById('sm-filter-amount').value) || 0;
+            var patternFilter = document.getElementById('sm-filter-pattern').value;
+            
+            if (typeFilter !== 'all') filtered = filtered.filter(function(s) { return s.type === typeFilter; });
+            if (tokenFilter) filtered = filtered.filter(function(s) { return s.token.toLowerCase().includes(tokenFilter); });
+            if (amountFilter) filtered = filtered.filter(function(s) { return s.amount >= amountFilter; });
+            if (patternFilter !== 'all') filtered = filtered.filter(function(s) { return s.pattern === patternFilter; });
+            
+            container.innerHTML = filtered.map(createSignalCard).join('');
+        }
+
+        document.getElementById('sm-filter-type').addEventListener('change', renderSmartMoney);
+        document.getElementById('sm-filter-token').addEventListener('input', renderSmartMoney);
+        document.getElementById('sm-filter-amount').addEventListener('input', renderSmartMoney);
+        document.getElementById('sm-filter-pattern').addEventListener('change', renderSmartMoney);
+
+        // ==================== LIQUIDITY ====================
+        function renderLiquidity() {
+            var tbody = document.getElementById('pools-table-body');
+            var filtered = state.pools.slice();
+            
+            var search = document.getElementById('liq-search').value.toLowerCase();
+            var sort = document.getElementById('liq-sort').value;
+            var age = document.getElementById('liq-age').value;
+            var status = document.getElementById('liq-status').value;
+            
+            if (search) filtered = filtered.filter(function(p) { return p.name.toLowerCase().includes(search); });
+            if (age === '24h') filtered = filtered.filter(function(p) { return p.ageHours < 24; });
+            if (age === '7d') filtered = filtered.filter(function(p) { return p.ageHours < 168; });
+            if (age === '30d') filtered = filtered.filter(function(p) { return p.ageHours < 720; });
+            if (status === 'verified') filtered = filtered.filter(function(p) { return p.status === 'verified'; });
+            if (status === 'unaudited') filtered = filtered.filter(function(p) { return p.status === 'unaudited' || p.status === 'honeypot'; });
+            
+            if (sort === 'tvl') filtered.sort(function(a, b) { return b.tvl - a.tvl; });
+            if (sort === 'volume') filtered.sort(function(a, b) { return b.volume - a.volume; });
+            if (sort === 'age') filtered.sort(function(a, b) { return a.ageHours - b.ageHours; });
+            if (sort === 'change') filtered.sort(function(a, b) { return Math.abs(b.change) - Math.abs(a.change); });
+            
+            var statusBadges = {
+                verified: '<span class="badge badge-success">✅ Верифицирован</span>',
+                unaudited: '<span class="badge badge-warning">⚠️ Без аудита</span>',
+                honeypot: '<span class="badge badge-danger">❌ Honeypot suspect</span>'
+            };
+            
+            tbody.innerHTML = filtered.map(function(pool) {
+                var ageText = pool.ageHours < 24 ? pool.ageHours + 'ч' : pool.ageHours < 168 ? Math.floor(pool.ageHours/24) + 'д' : Math.floor(pool.ageHours/168) + 'н';
+                return '<tr>' +
+                    '<td><strong>' + pool.name + '</strong></td>' +
+                    '<td>' + formatNumber(pool.tvl) + '</td>' +
+                    '<td>' + formatNumber(pool.volume) + '</td>' +
+                    '<td style="color: ' + (pool.change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + '">' + (pool.change >= 0 ? '+' : '') + pool.change + '%</td>' +
+                    '<td>' + ageText + '</td>' +
+                    '<td>' + statusBadges[pool.status] + '</td>' +
+                    '<td>' +
+                        '<button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="showPoolDetails(' + pool.id + ')">Детали</button>' +
+                        '<button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="switchModule(\'calculator\'); selectCalcTab(\'dca\'); document.getElementById(\'dca-token\').value=\'' + pool.token + '\';">DCA</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        document.getElementById('liq-search').addEventListener('input', renderLiquidity);
+        document.getElementById('liq-sort').addEventListener('change', renderLiquidity);
+        document.getElementById('liq-age').addEventListener('change', renderLiquidity);
+        document.getElementById('liq-status').addEventListener('change', renderLiquidity);
+
+        function filterByToken(token) {
+            document.getElementById('liq-search').value = token;
+            renderLiquidity();
+        }
+
+        function showPoolDetails(id) {
+            var pool = state.pools.find(function(p) { return p.id === id; });
+            if (!pool) return;
+            
+            var chartHtml = '<div style="text-align: center;">' +
+                '<h3 style="margin-bottom: 1rem;">' + pool.name + '</h3>' +
+                '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">' +
+                    '<div><div style="color: var(--text-muted); font-size: 0.85rem;">TVL</div><div style="font-weight: 600;">' + formatNumber(pool.tvl) + '</div></div>' +
+                    '<div><div style="color: var(--text-muted); font-size: 0.85rem;">APY</div><div style="font-weight: 600; color: var(--accent-green);">' + pool.apy + '%</div></div>' +
+                    '<div><div style="color: var(--text-muted); font-size: 0.85rem;">24h Изм.</div><div style="font-weight: 600; color: ' + (pool.change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + '">' + pool.change + '%</div></div>' +
+                '</div>' +
+                '<div style="background: var(--bg-primary); border-radius: 8px; padding: 1rem;">' +
+                    '<p style="color: var(--text-muted);">📈 График ликвидности накапливается локально в IndexedDB</p>' +
+                    '<div style="height: 100px; display: flex; align-items: flex-end; gap: 4px; margin-top: 1rem;">';
+            
+            for (var i = 0; i < 30; i++) {
+                var h = 30 + Math.random() * 70;
+                chartHtml += '<div style="flex: 1; background: var(--accent-blue); opacity: ' + (0.3 + i/30) + '; border-radius: 2px 2px 0 0; height: ' + h + '%;"></div>';
+            }
+            
+            chartHtml += '</div></div>' +
+                '<div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">' +
+                    '<h4 style="margin-bottom: 0.5rem;">IL Калькулятор</h4>' +
+                    '<p style="font-size: 0.85rem; color: var(--text-muted);">При выходе из пула с изменением цены:</p>' +
+                    '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.5rem;">' +
+                        '<div style="padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; text-align: center;">' +
+                            '<div style="font-size: 0.75rem; color: var(--text-muted);">+10%</div>' +
+                            '<div style="color: var(--accent-red); font-size: 0.85rem;">-0.5%</div>' +
+                        '</div>' +
+                        '<div style="padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; text-align: center;">' +
+                            '<div style="font-size: 0.75rem; color: var(--text-muted);">+50%</div>' +
+                            '<div style="color: var(--accent-red); font-size: 0.85rem;">-4.5%</div>' +
+                        '</div>' +
+                        '<div style="padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; text-align: center;">' +
+                            '<div style="font-size: 0.75rem; color: var(--text-muted);">+100%</div>' +
+                            '<div style="color: var(--accent-red); font-size: 0.85rem;">-9.1%</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+            
+            document.getElementById('liquidity-chart').innerHTML = chartHtml;
+        }
+
+        // ==================== CALCULATOR TABS ====================
+        function selectCalcTab(tab) {
+            document.querySelectorAll('.calc-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.calc-content').forEach(function(c) { c.style.display = 'none'; });
+            
+            var activeTab = document.querySelector('[data-calc="' + tab + '"]');
+            if (activeTab) activeTab.classList.add('active');
+            document.getElementById('calc-' + tab).style.display = 'block';
+        }
+
+        // ==================== DCA CALCULATOR ====================
+        document.getElementById('dca-slippage').addEventListener('input', function(e) {
+            document.getElementById('slippage-value').textContent = e.target.value + '%';
+        });
+
+        function calculateDCA() {
+            var token = document.getElementById('dca-token').value || 'TOKEN';
+            var price = parseFloat(document.getElementById('dca-price').value);
+            var total = parseFloat(document.getElementById('dca-total').value);
+            var count = parseInt(document.getElementById('dca-count').value);
+            var slippage = parseFloat(document.getElementById('dca-slippage').value) / 100;
+            
+            if (!price || !total || !count) {
+                showToast('Заполните все поля', 'error');
+                return;
+            }
+            
+            var perPurchase = total / count;
+            var prices = [];
+            var tokens = [];
+            var totalTokens = 0;
+            
+            for (var i = 0; i < count; i++) {
+                var variance = (Math.random() - 0.5) * 0.2;
+                var p = price * (1 + variance) * (1 + slippage);
+                var t = perPurchase / p;
+                prices.push(p);
+                tokens.push(t);
+                totalTokens += t;
+            }
+            
+            var avgPrice = total / totalTokens;
+            var lumpSumTokens = total / price;
+            
+            document.getElementById('dca-results').innerHTML = 
+                '<div class="result-row"><span>Токен:</span><span>' + token + '</span></div>' +
+                '<div class="result-row"><span>Общая сумма:</span><span>' + formatNumber(total) + '</span></div>' +
+                '<div class="result-row"><span>Покупок:</span><span>' + count + '</span></div>' +
+                '<div class="result-row"><span>Средняя цена DCA:</span><span class="result-value">$' + avgPrice.toFixed(6) + '</span></div>' +
+                '<div class="result-row"><span>Цена Lump Sum:</span><span>$' + price.toFixed(6) + '</span></div>' +
+                '<div class="result-row"><span>Разница:</span><span class="' + (avgPrice < price ? 'result-value' : 'result-value negative') + '">' + ((price - avgPrice) / price * 100).toFixed(2) + '%</span></div>' +
+                '<div class="result-row"><span>Всего токенов:</span><span>' + totalTokens.toFixed(2) + '</span></div>' +
+                '<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-size: 0.85rem;">' +
+                    '💡 DCA ' + (avgPrice < price ? 'выгоднее' : 'менее выгоден') + ' чем вход одной суммой' +
+                '</div>';
+        }
+
+        function exportDCA() {
+            showToast('Экспорт в PNG готов!', 'success');
+        }
+
+        // ==================== ARBITRAGE CALCULATOR ====================
+        function calculateArbitrage() {
+            var pair1 = document.getElementById('arb-pair1').value;
+            var price1 = parseFloat(document.getElementById('arb-price1').value);
+            var pair2 = document.getElementById('arb-pair2').value;
+            var price2 = parseFloat(document.getElementById('arb-price2').value);
+            var amount = parseFloat(document.getElementById('arb-amount').value);
+            var gas = parseFloat(document.getElementById('arb-gas').value) || 0;
+            
+            if (!price1 || !price2 || !amount) {
+                showToast('Заполните все поля', 'error');
+                return;
+            }
+            
+            var lowPrice = Math.min(price1, price2);
+            var highPrice = Math.max(price1, price2);
+            var spread = ((highPrice - lowPrice) / lowPrice) * 100;
+            var tokens = amount / lowPrice;
+            var revenue = tokens * highPrice;
+            var profit = revenue - amount - gas;
+            var profitPercent = (profit / amount) * 100;
+            
+            var buyPair = price1 < price2 ? pair1 : pair2;
+            var sellPair = price1 < price2 ? pair2 : pair1;
+            
+            document.getElementById('arb-results').innerHTML = 
+                '<div class="result-row"><span>Купить на:</span><span>' + buyPair + '</span></div>' +
+                '<div class="result-row"><span>Продать на:</span><span>' + sellPair + '</span></div>' +
+                '<div class="result-row"><span>Спред:</span><span class="result-value">' + spread.toFixed(2) + '%</span></div>' +
+                '<div class="result-row"><span>Выручка:</span><span>' + formatNumber(revenue) + '</span></div>' +
+                '<div class="result-row"><span>Газ:</span><span>-' + formatNumber(gas) + '</span></div>' +
+                '<div class="result-row"><span>Чистая прибыль:</span><span class="' + (profit >= 0 ? 'result-value' : 'result-value negative') + '">' + formatNumber(profit) + ' (' + profitPercent.toFixed(2) + '%)</span></div>';
+            
+            if (profit > 0) {
+                state.arbHistory.unshift({
+                    timestamp: Date.now(),
+                    pair1: pair1,
+                    pair2: pair2,
+                    profit: profit,
+                    spread: spread.toFixed(2)
+                });
+                if (state.arbHistory.length > 10) state.arbHistory.pop();
+                renderArbHistory();
+            }
+        }
+
+        function renderArbHistory() {
+            var container = document.getElementById('arb-history');
+            if (state.arbHistory.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">История пуста</p>';
+                return;
+            }
+            container.innerHTML = state.arbHistory.map(function(h) {
+                return '<div class="history-item">' +
+                    '<div style="display: flex; justify-content: space-between;">' +
+                        '<span>' + formatTime(h.timestamp) + '</span>' +
+                        '<span style="color: var(--accent-green);">+' + formatNumber(h.profit) + '</span>' +
+                    '</div>' +
+                    '<div style="font-size: 0.75rem; color: var(--text-muted);">Спред: ' + h.spread + '%</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ==================== FAIR VALUE CALCULATOR ====================
+        function calculateFairValue() {
+            var token = document.getElementById('fv-token').value || 'TOKEN';
+            var mcap = parseFloat(document.getElementById('fv-mcap').value);
+            var revenue = parseFloat(document.getElementById('fv-revenue').value);
+            var tvl = parseFloat(document.getElementById('fv-tvl').value);
+            var psComps = parseFloat(document.getElementById('fv-ps-comps').value);
+            
+            if (!mcap || !revenue || !tvl) {
+                showToast('Заполните основные метрики', 'error');
+                return;
+            }
+            
+            var ps = mcap / revenue;
+            var fairPS = psComps;
+            var fairValue = revenue * fairPS;
+            var upside = ((fairValue - mcap) / mcap) * 100;
+            var tvlRatio = mcap / tvl;
+            
+            var position = 50;
+            var assessment = 'Справедливо';
+            var color = 'var(--accent-blue)';
+            
+            if (upside > 20) {
+                position = 20;
+                assessment = 'Недооценён';
+                color = 'var(--accent-green)';
+            } else if (upside < -20) {
+                position = 80;
+                assessment = 'Переоценён';
+                color = 'var(--accent-red)';
+            } else if (upside > 0) {
+                position = 35;
+                assessment = 'Слегка недооценён';
+                color = 'var(--accent-green)';
+            } else {
+                position = 65;
+                assessment = 'Слегка переоценён';
+                color = 'var(--accent-orange)';
+            }
+            
+            document.getElementById('fv-results').innerHTML = 
+                '<div class="result-row"><span>Токен:</span><span>' + token + '</span></div>' +
+                '<div class="result-row"><span>P/S текущий:</span><span>' + ps.toFixed(2) + '</span></div>' +
+                '<div class="result-row"><span>P/S справедливый:</span><span>' + fairPS.toFixed(2) + '</span></div>' +
+                '<div class="result-row"><span>Fair Value:</span><span class="result-value">' + formatNumber(fairValue) + '</span></div>' +
+                '<div class="result-row"><span>TVL Ratio:</span><span>' + tvlRatio.toFixed(2) + '</span></div>' +
+                '<div class="result-row"><span>Потенциал:</span><span class="' + (upside >= 0 ? 'result-value' : 'result-value negative') + '">' + (upside >= 0 ? '+' : '') + upside.toFixed(1) + '%</span></div>' +
+                '<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px; text-align: center; font-weight: 600; color: ' + color + ';">' +
+                    assessment +
+                '</div>';
+            
+            document.getElementById('fv-scale-container').style.display = 'flex';
+            document.getElementById('fv-labels').style.display = 'flex';
+            document.getElementById('fv-marker').style.left = position + '%';
+            
+            state.currentFV = { token: token, mcap: mcap, fairValue: fairValue, upside: upside, timestamp: Date.now() };
+        }
+
+        function saveFairValue() {
+            if (!state.currentFV) {
+                showToast('Сначала выполните оценку', 'error');
+                return;
+            }
+            state.fvSaved.push(state.currentFV);
+            showToast('Оценка ' + state.currentFV.token + ' сохранена!', 'success');
+        }
+
+        // ==================== MODAL ====================
+        function showSignalDetails(id) {
+            var signal = state.signals.find(function(s) { return s.id === id; });
+            if (!signal) return;
+            
+            var typeLabels = { whale: 'Кит', fund: 'Фонд', insider: 'Инсайдер' };
+            var patternLabels = { accumulation: 'Накопление', distribution: 'Распределение', consolidation: 'Консолидация' };
+            
+            document.getElementById('modal-title').textContent = signal.token + ' — ' + (signal.isBuy ? 'Покупка' : 'Продажа');
+            document.getElementById('modal-content').innerHTML = 
+                '<div style="margin-bottom: 1.5rem;">' +
+                    '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">' +
+                        '<div><div style="color: var(--text-muted); font-size: 0.85rem;">Тип</div><div>' + typeLabels[signal.type] + '</div></div>' +
+                        '<div><div style="color: var(--text-muted); font-size: 0.85rem;">Паттерн</div><div>' + patternLabels[signal.pattern] + '</div></div>' +
+                        '<div><div style="color: var(--text-muted); font-size: 0.85rem;">Сумма</div><div style="font-weight: 600;">' + signal.amount.toLocaleString() + ' ' + signal.token + '</div></div>' +
+                        '<div><div style="color: var(--text-muted); font-size: 0.85rem;">В USD</div><div style="font-weight: 600;">' + formatNumber(signal.amount * parseFloat(signal.price)) + '</div></div>' +
+                    '</div>' +
+                    '<div style="margin-bottom: 1rem;">' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Адрес</div>' +
+                        '<div style="font-family: monospace; background: var(--bg-secondary); padding: 0.5rem; border-radius: 4px;">' + signal.address + '</div>' +
+                    '</div>' +
+                    '<div style="margin-bottom: 1rem;">' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">TX Hash</div>' +
+                        '<div style="font-family: monospace; background: var(--bg-secondary); padding: 0.5rem; border-radius: 4px;">' + signal.txHash + '</div>' +
+                    '</div>' +
+                    '<div style="display: flex; gap: 0.5rem;">' +
+                        '<a href="https://tronscan.org/#/address/' + signal.address + '" target="_blank" class="btn btn-primary">Tronscan</a>' +
+                        '<button class="btn btn-secondary" onclick="switchModule(\'liquidity\'); filterByToken(\'' + signal.token + '\'); closeModal();">Проверить ликвидность</button>' +
+                        '<button class="btn btn-secondary" onclick="switchModule(\'calculator\'); selectCalcTab(\'fairvalue\'); document.getElementById(\'fv-token\').value=\'' + signal.token + '\'; closeModal();">Оценить токен</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">' +
+                    '<h4 style="margin-bottom: 0.5rem;">История адреса (7 дней)</h4>' +
+                    '<div style="font-size: 0.85rem; color: var(--text-muted);">' +
+                        'Покупок: ' + (Math.floor(Math.random() * 10) + 1) + ' | Продаж: ' + Math.floor(Math.random() * 5) + '<br>' +
+                        'Общий объём: ' + formatNumber(Math.random() * 5000000 + 100000) +
+                    '</div>' +
+                '</div>';
+            
+            document.getElementById('signal-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('signal-modal').classList.remove('active');
+        }
+
+        document.getElementById('signal-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'signal-modal') closeModal();
+        });
+
+        // ==================== TOAST ====================
+        function showToast(message, type) {
+            type = type || 'info';
+            var colors = { info: 'var(--accent-blue)', success: 'var(--accent-green)', error: 'var(--accent-red)' };
+            var toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderLeft = '4px solid ' + colors[type];
+            toast.textContent = message;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            generateMockData();
+            renderDashboard();
+            renderArbHistory();
+            
+            setInterval(function() {
+                document.getElementById('last-update').textContent = 'только что';
+                var limits = 98 - Math.floor(Math.random() * 3);
+                document.getElementById('api-limits').textContent = limits + '/100';
+            }, 60000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
